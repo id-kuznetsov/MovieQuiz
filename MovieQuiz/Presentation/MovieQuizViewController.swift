@@ -3,6 +3,8 @@ import UIKit
 final class MovieQuizViewController: UIViewController {
     
 // MARK: IB Outlets
+    @IBOutlet private var yesButton: UIButton!
+    @IBOutlet private var noButton: UIButton!
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
@@ -71,6 +73,7 @@ final class MovieQuizViewController: UIViewController {
     }
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        buttonState()
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
         
@@ -78,6 +81,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        buttonState()
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         
@@ -110,6 +114,7 @@ final class MovieQuizViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionResult()
+            self.buttonState()
         }
     }
     
@@ -125,7 +130,13 @@ final class MovieQuizViewController: UIViewController {
             show(quiz: resultOfConvert)
         }
     }
-    // алерт с результатом
+    // включение - выключение кнопок после ответа
+    private func buttonState() {
+        yesButton.isEnabled = !yesButton.isEnabled
+        noButton.isEnabled = !noButton.isEnabled
+    }
+    
+    // Алерт с результатом
     private func show(quiz result: QuizResultsViewModel) {
         let alert = UIAlertController(
             title: result.title,
