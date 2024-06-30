@@ -69,6 +69,9 @@ final class MovieQuizViewController: UIViewController {
         super.viewDidLoad()
         let currentQuestion = questions[currentQuestionIndex]
         let resultOfConvert = convert(model: currentQuestion)
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.cornerRadius = 20
         show(quiz: resultOfConvert)
     }
 // MARK: IB Actions
@@ -107,9 +110,6 @@ final class MovieQuizViewController: UIViewController {
         if isCorrect {
             correctAnswers += 1
         }
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 20
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
