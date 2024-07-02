@@ -76,7 +76,7 @@ final class MovieQuizViewController: UIViewController {
     }
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        buttonState()
+        buttonState(isEnabled: false)
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
         
@@ -84,7 +84,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        buttonState()
+        buttonState(isEnabled: false)
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         
@@ -114,7 +114,7 @@ final class MovieQuizViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showNextQuestionResult()
-            self.buttonState()
+            self.buttonState(isEnabled: true)
         }
     }
     
@@ -131,9 +131,9 @@ final class MovieQuizViewController: UIViewController {
         }
     }
     // включение - выключение кнопок после ответа
-    private func buttonState() {
-        yesButton.isEnabled = !yesButton.isEnabled
-        noButton.isEnabled = !noButton.isEnabled
+    private func buttonState(isEnabled: Bool) {
+        yesButton.isEnabled = isEnabled
+        noButton.isEnabled = isEnabled
     }
     
     // Алерт с результатом
