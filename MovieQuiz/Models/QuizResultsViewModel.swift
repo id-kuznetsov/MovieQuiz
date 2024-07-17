@@ -7,7 +7,7 @@
 
 import UIKit
 
-// TODO: не используется, удалить ? ❌
+// не используется, удалить ? ❌
 struct QuizResultsViewModel {
     let title: String
     let text: String

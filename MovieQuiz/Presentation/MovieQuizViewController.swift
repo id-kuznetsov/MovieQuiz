@@ -13,10 +13,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestionIndex = 0
     // переменная количества правильных ответов
     private var correctAnswers = 0
-    
-    private var questionsAmount: Int = 10
+    // переменная количества вопросов
+    private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenter = AlertPresenter()
+    private var statisticService: StatisticServiceProtocol?
     private var currentQuestion: QuizQuestion?
     
     override func viewDidLoad() {
@@ -30,6 +31,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let alertPresenter = AlertPresenter()
         alertPresenter.delegate = self
         self.alertPresenter = alertPresenter
+        
+        statisticService = StatisticService()
         
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -101,9 +104,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionResult() {
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = correctAnswers == questionsAmount ?
-            "Поздравляем, вы ответили на \(questionsAmount) из \(questionsAmount)!" :
-            "Вы ответили на \(correctAnswers) из \(questionsAmount), попробуйте ещё раз!"
+            guard let statisticService = statisticService else { return }
+            statisticService.store(correct: correctAnswers, total: questionsAmount)
+            
+            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)\n" +
+            "Количество сыгранных квизов: \(statisticService.gamesCount)\n" +
+            "Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) " +
+            "(\(statisticService.bestGame.date.dateTimeString))\n" +
+            "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+            
             let alertModel = AlertModel(
                 title: "Этот раунд окончен",
                 message: text,

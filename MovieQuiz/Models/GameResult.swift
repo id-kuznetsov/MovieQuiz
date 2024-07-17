@@ -15,8 +15,4 @@ struct GameResult {
     func isBestResult(_ another: GameResult) -> Bool {
         correct > another.correct
     }
-    
-    func store(correct count: Int, total amount: Int) {
-        
-    }
 }
