@@ -38,16 +38,17 @@ final class StatisticService: StatisticServiceProtocol {
     
     var bestGame: GameResult {
         get {
-            return .init(
-                correct: storage.integer(forKey: Keys.bestGameCorrect.rawValue),
-                total: storage.integer(forKey: Keys.bestGameTotal.rawValue),
-                date: storage.object(forKey: Keys.bestGameDate.rawValue) as? Date ?? Date()
-            )
+            guard let bestResult = storage.data(forKey: Keys.bestGame.rawValue),
+                  let record = try? JSONDecoder().decode(GameResult.self, from: bestResult) else {
+                return .init(correct: 0, total: 0, date: Date())
+            }
+            return record
         }
         set {
-            storage.set(newValue.correct, forKey: Keys.bestGameCorrect.rawValue)
-            storage.set(newValue.total, forKey: Keys.bestGameTotal.rawValue)
-            storage.set(newValue.date, forKey: Keys.bestGameDate.rawValue)
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                storage.set(encoded, forKey: Keys.bestGame.rawValue)
+            }
         }
     }
     
