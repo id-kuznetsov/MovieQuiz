@@ -56,7 +56,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         buttonState(isEnabled: false)
-        guard let currentQuestion = currentQuestion else {
+        guard let currentQuestion else {
             return
         }
         let givenAnswer = true
@@ -66,7 +66,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         buttonState(isEnabled: false)
-        guard let currentQuestion = currentQuestion else {
+        guard let currentQuestion else {
             return
         }
         let givenAnswer = false
@@ -107,11 +107,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             guard let statisticService = statisticService else { return }
             statisticService.store(correct: correctAnswers, total: questionsAmount)
             
-            let text = "Ваш результат: \(correctAnswers)/\(questionsAmount)\n" +
-            "Количество сыгранных квизов: \(statisticService.gamesCount)\n" +
-            "Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) " +
-            "(\(statisticService.bestGame.date.dateTimeString))\n" +
-            "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+            let text = """
+            Ваш результат: \(correctAnswers)/\(questionsAmount)
+            Количество сыгранных квизов: \(statisticService.gamesCount)
+            Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))
+            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+            """
             
             let alertModel = AlertModel(
                 title: "Этот раунд окончен",
