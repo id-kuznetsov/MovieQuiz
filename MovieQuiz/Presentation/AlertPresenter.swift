@@ -9,9 +9,9 @@ import UIKit
 
 class AlertPresenter: AlertPresenterProtocol {
     
-    weak var delegate: UIViewController?
+    weak var delegate: AlertPresenterDelegate?
     
-    func showAlert(_ alertModel: AlertModel)  {
+    func showResultAlert(_ alertModel: AlertModel)  {
         let alert = UIAlertController(
             title: alertModel.title,
             message: alertModel.message,
@@ -24,11 +24,7 @@ class AlertPresenter: AlertPresenterProtocol {
             }
         
         alert.addAction(action)
-        
-        guard let delegate = delegate else { return }
-        delegate.present(alert, animated: true)
-        
-        
+        delegate?.showAlert(alert)
     }
    
 }

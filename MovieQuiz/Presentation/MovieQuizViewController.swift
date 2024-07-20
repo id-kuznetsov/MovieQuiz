@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
     
 // MARK: IB Outlets
     @IBOutlet private var yesButton: UIButton!
@@ -16,7 +16,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // переменная количества вопросов
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
-    private var alertPresenter: AlertPresenter = AlertPresenter()
+    private var alertModel: AlertModel?
+    private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServiceProtocol?
     private var currentQuestion: QuizQuestion?
     
@@ -52,6 +53,31 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.show(quiz: viewModel)
         }
         
+    }
+// MARK: AlertPresenterDelegate
+    func showAlert(_ alert: UIAlertController) {
+        guard let statisticService = statisticService else { return }
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        // надо это вынести в сущность отдельно
+        let text = """
+        Ваш результат: \(correctAnswers)/\(questionsAmount)
+        Количество сыгранных квизов: \(statisticService.gamesCount)
+        Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))
+        Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+        """
+        
+        let alertModel = AlertModel(
+            title: "Этот раунд окончен",
+            message: text,
+            buttonText: "Сыграть еще раз",
+            completion: { [weak self] in
+                guard let self = self else { return }
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                guard let questionFactory = questionFactory else { return }
+                questionFactory.requestNextQuestion()
+            })
+        alertPresenter?.showAlert(alertModel)
     }
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
@@ -104,27 +130,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionResult() {
         if currentQuestionIndex == questionsAmount - 1 {
-            guard let statisticService = statisticService else { return }
-            statisticService.store(correct: correctAnswers, total: questionsAmount)
-            
-            let text = """
-            Ваш результат: \(correctAnswers)/\(questionsAmount)
-            Количество сыгранных квизов: \(statisticService.gamesCount)
-            Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))
-            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
-            """
-            
-            let alertModel = AlertModel(
-                title: "Этот раунд окончен",
-                message: text,
-                buttonText: "Сыграть еще раз",
-                completion: { [weak self] in
-                    guard let self = self else { return }
-                    self.currentQuestionIndex = 0
-                    self.correctAnswers = 0
-                    guard let questionFactory = questionFactory else { return }
-                    questionFactory.requestNextQuestion()
-                })
+            guard let alertPresenter else { return }
             alertPresenter.showAlert(alertModel)
         } else {
             currentQuestionIndex += 1
