@@ -99,7 +99,6 @@
 				5C5D07052C41D41900BD236B /* QuestionFactoryDelegate.swift */,
 				5C5D07322C47065F00BD236B /* StatisticService.swift */,
 				5C5D072E2C47012300BD236B /* StatisticServiceProtocol.swift */,
-				5CABD6432C49C3AB008B6A64 /* AlertPresenterDelegate.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -111,6 +110,7 @@
 				AD1ABAB72831907B00B3E448 /* Main.storyboard */,
 				5C5D070A2C426A3C00BD236B /* AlertPresenter.swift */,
 				5C5D070C2C427CE600BD236B /* AlertPresenterProtocol.swift */,
+				5CABD6432C49C3AB008B6A64 /* AlertPresenterDelegate.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
