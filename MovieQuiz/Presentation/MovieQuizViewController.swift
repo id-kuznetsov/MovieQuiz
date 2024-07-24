@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
 // MARK: IB Outlets
     @IBOutlet private var yesButton: UIButton!
@@ -48,16 +48,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         currentQuestion = question
         let viewModel = convert(model: question)
         
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.async {
             self.show(quiz: viewModel)
         }
         
     }
-// MARK: AlertPresenterDelegate
-    func showAlert(_ alert: UIAlertController) {
-        present(alert, animated: true)
-    }
+
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         buttonState(isEnabled: false)
@@ -100,8 +96,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         }
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            
             self.showNextQuestionResult()
             self.buttonState(isEnabled: true)
         }
@@ -111,12 +107,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         if currentQuestionIndex == questionsAmount - 1 {
             guard let statisticService = statisticService else { return }
             statisticService.store(correct: correctAnswers, total: questionsAmount)
+            let bestGame = statisticService.bestGame
+            let accuracy = String(format: "%.2f", statisticService.totalAccuracy)
             
             let text = """
             Ваш результат: \(correctAnswers)/\(questionsAmount)
             Количество сыгранных квизов: \(statisticService.gamesCount)
-            Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) (\(statisticService.bestGame.date.dateTimeString))
-            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+            Средняя точность: \(accuracy)%
             """
             
             let alertModel = AlertModel(
@@ -142,4 +140,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         yesButton.isEnabled = isEnabled
         noButton.isEnabled = isEnabled
     }
+}
+//MARK: Extensions
+
+// MARK: AlertPresenterDelegate
+extension MovieQuizViewController: AlertPresenterDelegate {
+        func showAlert(_ alert: UIAlertController) {
+            present(alert, animated: true)
+        }
 }

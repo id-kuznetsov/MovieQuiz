@@ -8,16 +8,7 @@
 import Foundation
 
 final class StatisticService: StatisticServiceProtocol {
-    private let storage = UserDefaults.standard
     
-    private enum Keys: String {
-        case correct
-        case bestGame
-        case gamesCount
-        case bestGameCorrect
-        case bestGameTotal
-        case bestGameDate
-    }
     var gamesCount: Int {
         get {
             storage.integer(forKey: Keys.gamesCount.rawValue)
@@ -38,8 +29,9 @@ final class StatisticService: StatisticServiceProtocol {
     
     var bestGame: GameResult {
         get {
+            let decoder = JSONDecoder()
             guard let bestResult = storage.data(forKey: Keys.bestGame.rawValue),
-                  let record = try? JSONDecoder().decode(GameResult.self, from: bestResult) else {
+                  let record = try? decoder.decode(GameResult.self, from: bestResult) else {
                 return .init(correct: 0, total: 0, date: Date())
             }
             return record
@@ -54,6 +46,17 @@ final class StatisticService: StatisticServiceProtocol {
     
     var totalAccuracy: Double {
          Double(correctAnswers) / (10 * Double(gamesCount)) * 100
+    }
+    
+    private let storage = UserDefaults.standard
+    
+    private enum Keys: String {
+        case correct
+        case bestGame
+        case gamesCount
+        case bestGameCorrect
+        case bestGameTotal
+        case bestGameDate
     }
     
     func store(correct count: Int, total amount: Int) {
