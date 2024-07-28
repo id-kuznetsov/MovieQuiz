@@ -8,6 +8,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    
 // MARK: Properties
     // переменная индекса вопроса
     private var currentQuestionIndex = 0
@@ -24,10 +26,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let questionFactory = QuestionFactory()
-        questionFactory.delegate = self
+        let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         self.questionFactory = questionFactory
-        questionFactory.requestNextQuestion()
+        showLoadingIndicator()
+        questionFactory.loadData()
         
         let alertPresenter = AlertPresenter()
         alertPresenter.delegate = self
@@ -53,6 +55,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
         
     }
+    
+    func didLoadDataFromServer() {
+        // TODO: разобраться с индикатором
+//        activityIndicator.hidesWhenStopped = true
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: any Error) {
+        showNetworkError(message: error.localizedDescription)
+    }
 
 // MARK: IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
@@ -77,7 +89,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 //    MARK: Methods
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+            image: UIImage(data: model.image) ?? UIImage()
+            /*image: UIImage(named: model.image) ?? UIImage()*/,
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         return questionStep
@@ -108,7 +121,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
            showQuizResult()
         } else {
             currentQuestionIndex += 1
-            guard let questionFactory = questionFactory else { return }
+            guard let questionFactory else { return }
             questionFactory.requestNextQuestion()
         }
     }
@@ -136,15 +149,39 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             message: text,
             buttonText: "Сыграть еще раз",
             completion: { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                guard let questionFactory = questionFactory else { return }
+                guard let questionFactory else { return }
                 questionFactory.requestNextQuestion()
             })
         alertPresenter?.showResultAlert(alertModel)
     }
+    
+    private func showLoadingIndicator() {
+        // TODO: разобраться с индикатором
+//        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+        activityIndicator.hidesWhenStopped = false
+    }
+    
+    private func showNetworkError(message: String) {
+        activityIndicator.hidesWhenStopped = true // скрываем индикатор загрузки
+        let alertModel = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробовать еще раз",
+            completion: {[weak self] in
+                guard let self = self else { return }
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                self.questionFactory?.requestNextQuestion()
+            }
+        )
+        alertPresenter?.showResultAlert(alertModel)
+    }
 }
+
 //MARK: Extensions
 
 // MARK: AlertPresenterDelegate
