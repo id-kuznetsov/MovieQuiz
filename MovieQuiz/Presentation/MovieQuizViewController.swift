@@ -2,7 +2,7 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
-// MARK: - IB Outlets
+    // MARK: - IB Outlets
     @IBOutlet private var yesButton: UIButton!
     @IBOutlet private var noButton: UIButton!
     @IBOutlet private var imageView: UIImageView!
@@ -10,7 +10,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
-// MARK: - Properties
+    // MARK: - Properties
     // переменная индекса вопроса
     private var currentQuestionIndex = 0
     // переменная количества правильных ответов
@@ -28,6 +28,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         self.questionFactory = questionFactory
+        activityIndicator.hidesWhenStopped = true
         showLoadingIndicator()
         questionFactory.loadData()
         
@@ -42,7 +43,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.cornerRadius = 20
         
     }
-// MARK: QuestionFactoryDelegate
+    // MARK: QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
@@ -65,8 +66,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     func didFailToLoadData(with error: any Error) {
         showNetworkError(message: error.localizedDescription)
     }
-
-// MARK: - IB Actions
+    
+    // MARK: - IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         buttonState(isEnabled: false)
         guard let currentQuestion else {
@@ -86,7 +87,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
-//    MARK: - Methods
+    //    MARK: - Methods
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
@@ -116,7 +117,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionResult() {
         if currentQuestionIndex == questionsAmount - 1 {
-           showQuizResult()
+            showQuizResult()
         } else {
             currentQuestionIndex += 1
             guard let questionFactory else { return }
@@ -150,8 +151,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 guard let self else { return }
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                guard let questionFactory else { return }
-                questionFactory.requestNextQuestion()
+                
+                questionFactory?.requestNextQuestion()
             })
         alertPresenter?.showResultAlert(alertModel)
     }
@@ -159,11 +160,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
-        activityIndicator.hidesWhenStopped = true
     }
     
     private func showNetworkError(message: String) {
-        activityIndicator.hidesWhenStopped = true // скрываем индикатор загрузки
         let alertModel = AlertModel(
             title: "Ошибка",
             message: message,
@@ -183,7 +182,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
 // MARK: AlertPresenterDelegate
 extension MovieQuizViewController: AlertPresenterDelegate {
-        func showAlert(_ alert: UIAlertController) {
-            present(alert, animated: true)
-        }
+    func showAlert(_ alert: UIAlertController) {
+        present(alert, animated: true)
+    }
 }

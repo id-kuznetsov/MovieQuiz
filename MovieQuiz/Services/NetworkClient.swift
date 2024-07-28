@@ -29,7 +29,7 @@ struct NetworkClient {
                 return
             }
 
-            guard let data = data else { return }
+            guard let data = data else { return handler(.failure(NetworkError.codeError))}
             handler(.success(data))
         }
         
