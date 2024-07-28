@@ -7,7 +7,6 @@
 
 import UIKit
 
-// для вопросов
 struct QuizQuestion {
     let image: Data
     let text: String
