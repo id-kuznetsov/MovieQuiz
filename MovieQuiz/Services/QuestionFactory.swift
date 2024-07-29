@@ -71,10 +71,10 @@ final class QuestionFactory: QuestionFactoryProtocol {
         let questionRating = (7...9).randomElement() ?? 7
         let sign = Bool.random()
         if sign {
-            text = "Рейтинг этого фильма больше чем \(questionRating)?"
+            text = "Рейтинг этого фильма\n больше чем \(questionRating)?"
             correctAnswer = rating > Float(questionRating)
         } else {
-            text = "Рейтинг этого фильма меньше чем \(questionRating)?"
+            text = "Рейтинг этого фильма\n меньше чем \(questionRating)?"
             correctAnswer = rating < Float(questionRating)
         }
         return (text, correctAnswer)
