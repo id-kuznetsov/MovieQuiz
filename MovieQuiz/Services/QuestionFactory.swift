@@ -64,7 +64,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
         }
     }
     
-    private func randomQuestion(rating: Float) -> (text: String, correctAnswer: Bool){
+    private func randomQuestion(rating: Float) -> QuestionText {
         let text: String
         let correctAnswer: Bool
         
@@ -77,6 +77,6 @@ final class QuestionFactory: QuestionFactoryProtocol {
             text = "Рейтинг этого фильма\n меньше чем \(questionRating)?"
             correctAnswer = rating < Float(questionRating)
         }
-        return (text, correctAnswer)
+        return QuestionText(text: text, correctAnswer: correctAnswer)
     }
 }
