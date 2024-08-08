@@ -50,13 +50,11 @@ final class QuestionFactory: QuestionFactoryProtocol {
             }
             
             let rating = Float(movie.rating) ?? 0
-            
-            let text = "Рейтинг этого фильма больше чем 7?"
-            let correctAnswer = rating > 7
+            let randomQuestion = randomQuestion(rating: rating)
             
             let question = QuizQuestion(image: imageData,
-                                        text: text,
-                                        correctAnswer: correctAnswer)
+                                        text: randomQuestion.text,
+                                        correctAnswer: randomQuestion.correctAnswer)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -64,5 +62,21 @@ final class QuestionFactory: QuestionFactoryProtocol {
 
             }
         }
+    }
+    
+    private func randomQuestion(rating: Float) -> QuestionText {
+        let text: String
+        let correctAnswer: Bool
+        
+        let questionRating = (7...9).randomElement() ?? 7
+        let sign = Bool.random()
+        if sign {
+            text = "Рейтинг этого фильма\n больше чем \(questionRating)?"
+            correctAnswer = rating > Float(questionRating)
+        } else {
+            text = "Рейтинг этого фильма\n меньше чем \(questionRating)?"
+            correctAnswer = rating < Float(questionRating)
+        }
+        return QuestionText(text: text, correctAnswer: correctAnswer)
     }
 }
