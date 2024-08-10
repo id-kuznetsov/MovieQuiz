@@ -8,7 +8,6 @@
 import Foundation
 
 struct StubNetworkClient: NetworkRouting {
-    
     enum TestError: Error {
     case test
     }
