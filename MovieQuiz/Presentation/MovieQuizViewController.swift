@@ -11,12 +11,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Properties
-    // переменная индекса вопроса
-    private var currentQuestionIndex = 0
-    // переменная количества правильных ответов
     private var correctAnswers = 0
-    // переменная количества вопросов
-    private let questionsAmount: Int = 10
+//    private var currentQuestionIndex = 0
+//    private let questionsAmount: Int = 10
+    private let presenter = MovieQuizPresenter()
     private var questionFactory: QuestionFactoryProtocol?
     private var alertModel: AlertModel?
     private var alertPresenter: AlertPresenterProtocol?
@@ -50,8 +48,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
         
         currentQuestion = question
-        let viewModel = convert(model: question)
-        
+        let viewModel = presenter.convert(model: question)
+
         DispatchQueue.main.async {
             self.show(quiz: viewModel)
         }
@@ -88,14 +86,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     //    MARK: - Methods
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
-    }
-    
     private func show(quiz step: QuizStepViewModel) {
         imageView.layer.borderColor = UIColor.clear.cgColor
         imageView.image = step.image
@@ -116,10 +106,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func showNextQuestionResult() {
-        if currentQuestionIndex == questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             showQuizResult()
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             guard let questionFactory else { return }
             questionFactory.requestNextQuestion()
         }
@@ -132,12 +122,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showQuizResult() {
         guard let statisticService = statisticService else { return }
-        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
         let bestGame = statisticService.bestGame
         let accuracy = String(format: "%.2f", statisticService.totalAccuracy)
         
         let text = """
-        Ваш результат: \(correctAnswers)/\(questionsAmount)
+        Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
         Количество сыгранных квизов: \(statisticService.gamesCount)
         Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
         Средняя точность: \(accuracy)%
@@ -149,7 +139,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             buttonText: "Сыграть еще раз",
             completion: { [weak self] in
                 guard let self else { return }
-                self.currentQuestionIndex = 0
+                self.presenter.resetQuestionIndex()
                 self.correctAnswers = 0
                 
                 questionFactory?.requestNextQuestion()
@@ -169,7 +159,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             buttonText: "Попробовать еще раз",
             completion: {[weak self] in
                 guard let self = self else { return }
-                self.currentQuestionIndex = 0
+                self.presenter.resetQuestionIndex()
                 self.correctAnswers = 0
                 self.questionFactory?.requestNextQuestion()
             }
