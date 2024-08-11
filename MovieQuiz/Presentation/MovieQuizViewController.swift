@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController {
     
     // MARK: - IB Outlets
     @IBOutlet private var yesButton: UIButton!
@@ -11,26 +11,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Properties
-    private var correctAnswers = 0
-//    private var currentQuestionIndex = 0
-//    private let questionsAmount: Int = 10
-    private let presenter = MovieQuizPresenter()
-    private var questionFactory: QuestionFactoryProtocol?
+    
+
+    private var presenter: MovieQuizPresenter!
+//    private var questionFactory: QuestionFactoryProtocol?
     private var alertModel: AlertModel?
-    private var alertPresenter: AlertPresenterProtocol?
+    var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServiceProtocol?
-    private var currentQuestion: QuizQuestion?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        presenter.viewController = self
-        
-        let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        self.questionFactory = questionFactory
+        presenter = MovieQuizPresenter(viewController: self)
+       
         activityIndicator.hidesWhenStopped = true
         showLoadingIndicator()
-        questionFactory.loadData()
         
         let alertPresenter = AlertPresenter()
         alertPresenter.delegate = self
@@ -43,42 +38,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.cornerRadius = 20
         
     }
-    // MARK: QuestionFactoryDelegate
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
-            return
-        }
-        
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-
-        DispatchQueue.main.async {
-            self.show(quiz: viewModel)
-        }
-        
-    }
-    
-    func didLoadDataFromServer() {
-        activityIndicator.stopAnimating()
-        questionFactory?.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: any Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
     
     // MARK: - IB Actions
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
     }
     //    MARK: - Methods
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.layer.borderColor = UIColor.clear.cgColor
         imageView.image = step.image
         counterLabel.text = step.questionNumber
@@ -87,23 +57,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     func showAnswerResult(isCorrect: Bool) {
         if isCorrect {
-            correctAnswers += 1
+            presenter.didAnswer(isCorrectAnswer: isCorrect)
         }
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.showNextQuestionResult()
+            self.presenter.showNextQuestionOrResult()
             self.buttonState(isEnabled: true)
-        }
-    }
-    
-    private func showNextQuestionResult() {
-        if presenter.isLastQuestion() {
-            showQuizResult()
-        } else {
-            presenter.switchToNextQuestion()
-            guard let questionFactory else { return }
-            questionFactory.requestNextQuestion()
         }
     }
     
@@ -112,14 +72,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = isEnabled
     }
     
-    private func showQuizResult() {
+    func showQuizResult() {
         guard let statisticService = statisticService else { return }
-        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
+        statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
         let bestGame = statisticService.bestGame
         let accuracy = String(format: "%.2f", statisticService.totalAccuracy)
         
         let text = """
-        Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
+        Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)
         Количество сыгранных квизов: \(statisticService.gamesCount)
         Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
         Средняя точность: \(accuracy)%
@@ -131,29 +91,30 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             buttonText: "Сыграть еще раз",
             completion: { [weak self] in
                 guard let self else { return }
-                self.presenter.resetQuestionIndex()
-                self.correctAnswers = 0
+                self.presenter.restartGame()
                 
-                questionFactory?.requestNextQuestion()
             })
         alertPresenter?.showResultAlert(alertModel)
     }
     
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    private func showNetworkError(message: String) {
+    func hideLoadingIndicator() {
+        activityIndicator.stopAnimating()
+    }
+    
+    func showNetworkError(message: String) {
         let alertModel = AlertModel(
             title: "Ошибка",
             message: message,
             buttonText: "Попробовать еще раз",
             completion: {[weak self] in
                 guard let self = self else { return }
-                self.presenter.resetQuestionIndex()
-                self.correctAnswers = 0
-                self.questionFactory?.requestNextQuestion()
+                self.presenter.restartGame()
+                presenter.correctAnswers = 0
             }
         )
         alertPresenter?.showResultAlert(alertModel)
