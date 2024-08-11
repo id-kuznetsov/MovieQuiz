@@ -14,10 +14,8 @@ final class MovieQuizViewController: UIViewController {
     
 
     private var presenter: MovieQuizPresenter!
-//    private var questionFactory: QuestionFactoryProtocol?
     private var alertModel: AlertModel?
-    var alertPresenter: AlertPresenterProtocol?
-    private var statisticService: StatisticServiceProtocol?
+    private var alertPresenter: AlertPresenterProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,10 +29,6 @@ final class MovieQuizViewController: UIViewController {
         alertPresenter.delegate = self
         self.alertPresenter = alertPresenter
         
-        statisticService = StatisticService()
-        
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
         imageView.layer.cornerRadius = 20
         
     }
@@ -55,16 +49,10 @@ final class MovieQuizViewController: UIViewController {
         textLabel.text = step.question
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        if isCorrect {
-            presenter.didAnswer(isCorrectAnswer: isCorrect)
-        }
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.presenter.showNextQuestionOrResult()
-            self.buttonState(isEnabled: true)
-        }
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     func buttonState(isEnabled: Bool) {
@@ -73,21 +61,11 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func showQuizResult() {
-        guard let statisticService = statisticService else { return }
-        statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-        let bestGame = statisticService.bestGame
-        let accuracy = String(format: "%.2f", statisticService.totalAccuracy)
-        
-        let text = """
-        Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)
-        Количество сыгранных квизов: \(statisticService.gamesCount)
-        Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
-        Средняя точность: \(accuracy)%
-        """
+        let message = presenter.makeResultsMessage()
         
         let alertModel = AlertModel(
             title: "Этот раунд окончен",
-            message: text,
+            message: message,
             buttonText: "Сыграть еще раз",
             completion: { [weak self] in
                 guard let self else { return }
@@ -114,7 +92,6 @@ final class MovieQuizViewController: UIViewController {
             completion: {[weak self] in
                 guard let self = self else { return }
                 self.presenter.restartGame()
-                presenter.correctAnswers = 0
             }
         )
         alertPresenter?.showResultAlert(alertModel)

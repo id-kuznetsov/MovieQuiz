@@ -8,22 +8,25 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    let questionsAmount: Int = 10
-    var correctAnswers = 0
-    var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var correctAnswers = 0
+    private var currentQuestionIndex = 0
+    private var currentQuestion: QuizQuestion?
     private weak var viewController: MovieQuizViewController?
     private var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticServiceProtocol?
     
-    private var currentQuestionIndex = 0
     
     init(viewController: MovieQuizViewController) {
-            self.viewController = viewController
-            
-            questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-            questionFactory?.loadData()
-            viewController.showLoadingIndicator()
-        }
-    
+        self.viewController = viewController
+        
+        statisticService = StatisticService()
+        
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
+    // MARK: QuestionFactoryDelegate
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
@@ -34,20 +37,29 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         viewController?.showNetworkError(message: message)
     }
     
-    func didRecieveNextQuestion(question: QuizQuestion?) {
+    func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
         }
         
         currentQuestion = question
         let viewModel = convert(model: question)
+        
         DispatchQueue.main.async { [weak self] in
             self?.viewController?.show(quiz: viewModel)
         }
     }
     
+    
+    
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
+    }
+    
+    func didAnswer(isCorrectAnswer: Bool) {
+        if isCorrectAnswer {
+            correctAnswers += 1
+        }
     }
     
     func restartGame() {
@@ -83,29 +95,22 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
         let givenAnswer = isYes
         
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
-    func didAnswer(isCorrectAnswer: Bool) {
-            if isCorrectAnswer {
-                correctAnswers += 1
-            }
+    private func proceedWithAnswer(isCorrect: Bool) {
+        didAnswer(isCorrectAnswer: isCorrect)
+        
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.proceedToNextQuestionOrResults()
+            viewController?.buttonState(isEnabled: true)
         }
+    }
     
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-           guard let question = question else {
-               return
-           }
-   
-           currentQuestion = question
-           let viewModel = convert(model: question)
-   
-           DispatchQueue.main.async {
-               self.viewController?.show(quiz: viewModel)
-           }
-       }
-    
-    func showNextQuestionOrResult() {
+    private func proceedToNextQuestionOrResults() {
         if self.isLastQuestion() {
             viewController?.showQuizResult()
         } else {
@@ -113,7 +118,23 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             questionFactory?.requestNextQuestion()
         }
     }
-
+    
+    func makeResultsMessage() -> String {
+        guard let statisticService = statisticService else { return "" }
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        let bestGame = statisticService.bestGame
+        let accuracy = String(format: "%.2f", statisticService.totalAccuracy)
+        
+        let text = """
+        Ваш результат: \(correctAnswers)/\(questionsAmount)
+        Количество сыгранных квизов: \(statisticService.gamesCount)
+        Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+        Средняя точность: \(accuracy)%
+        """
+        
+        return text
+    }
+    
 }
 
 
