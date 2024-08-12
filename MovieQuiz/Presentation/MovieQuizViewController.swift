@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
     // MARK: - IB Outlets
     @IBOutlet private var yesButton: UIButton!
@@ -22,7 +22,6 @@ final class MovieQuizViewController: UIViewController {
         
         presenter = MovieQuizPresenter(viewController: self)
        
-        activityIndicator.hidesWhenStopped = true
         showLoadingIndicator()
         
         let alertPresenter = AlertPresenter()
@@ -81,6 +80,7 @@ final class MovieQuizViewController: UIViewController {
     }
     
     func hideLoadingIndicator() {
+        activityIndicator.hidesWhenStopped = true
         activityIndicator.stopAnimating()
     }
     
