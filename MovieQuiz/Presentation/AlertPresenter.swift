@@ -26,9 +26,8 @@ final class AlertPresenter: AlertPresenterProtocol {
         alert.addAction(action)
         alert.view.accessibilityIdentifier = "alert"
         
-        
         delegate?.showAlert(alert)
     }
-   
+    
 }
 

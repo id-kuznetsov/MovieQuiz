@@ -12,7 +12,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     // MARK: - Properties
     
-
+    
     private var presenter: MovieQuizPresenter!
     private var alertModel: AlertModel?
     private var alertPresenter: AlertPresenterProtocol?
@@ -21,7 +21,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         super.viewDidLoad()
         
         presenter = MovieQuizPresenter(viewController: self)
-       
+        
         showLoadingIndicator()
         
         let alertPresenter = AlertPresenter()
