@@ -54,9 +54,6 @@ final class StatisticService: StatisticServiceProtocol {
         case correct
         case bestGame
         case gamesCount
-        case bestGameCorrect
-        case bestGameTotal
-        case bestGameDate
     }
     
     func store(correct count: Int, total amount: Int) {

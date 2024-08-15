@@ -7,7 +7,7 @@
 
 import UIKit
 
-class AlertPresenter: AlertPresenterProtocol {
+final class AlertPresenter: AlertPresenterProtocol {
     
     weak var delegate: AlertPresenterDelegate?
     
@@ -24,8 +24,10 @@ class AlertPresenter: AlertPresenterProtocol {
             }
         
         alert.addAction(action)
+        alert.view.accessibilityIdentifier = "alert"
+        
         delegate?.showAlert(alert)
     }
-   
+    
 }
 
